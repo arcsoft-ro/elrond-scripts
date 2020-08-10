@@ -1,0 +1,16 @@
+[Unit]
+  Description=Elrond Node-###node-index###
+  After=network-online.target
+
+  [Service]
+  User=###user-name###
+  WorkingDirectory=###node-dir###
+  ExecStart=###node-dir###/node -rest-api-interface localhost:###node-port### ###node-flags###
+  StandardOutput=journal
+  StandardError=journal
+  Restart=always
+  RestartSec=3
+  LimitNOFILE=4096
+
+  [Install]
+  WantedBy=multi-user.target
