@@ -1,0 +1,8 @@
+{
+    "ConfigRepoReleaseUrl":"https://api.github.com/repos/ElrondNetwork/elrond-config-mainnet/releases/latest",
+    "ConfigRepoUrl":"https://github.com/ElrondNetwork/elrond-config-mainnet.git",
+    "ElrondGoRepoUrl":"https://github.com/ElrondNetwork/elrond-go.git",
+    "GoInstallDir":"/usr/local",
+    "GoRequiredVersion":"go1.14.7",
+    "NodeFlags":"-use-log-view -log-level *:DEBUG"
+}

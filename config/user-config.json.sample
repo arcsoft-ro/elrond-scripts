@@ -1,0 +1,7 @@
+{
+    "BackupDir":"/home/elrond/elrond-backup",
+    "KeybaseIdentity":"",
+    "NodesDir":"/home/elrond/nodes",
+    "NodesNamePrefix":"erd-node-",
+    "UtilsDir":"/home/elrond/utils"
+}
