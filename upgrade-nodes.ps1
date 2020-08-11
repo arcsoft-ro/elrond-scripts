@@ -51,7 +51,7 @@ $elrondGoRepoPath = $buildDir + "/" + (Get-DefaultDirFromRepoUrl -RepoUrl $elron
 if($userConfig.TestNet -eq $true){
     $configRepoPath = $buildDir + "/" + ((Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.TestNetConfigRepoUrl))
     $configRepoUrl = $elrondConfig.TestNetConfigRepoUrl
-    $configRepoReleaseUrl = $elrondConfig.ConfigRepoReleaseUrl
+    $configRepoReleaseUrl = $elrondConfig.TestNetConfigRepoReleaseUrl
 }
 else{
     $configRepoPath = $buildDir + "/" + ((Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.ConfigRepoUrl))

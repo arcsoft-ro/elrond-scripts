@@ -96,11 +96,12 @@ function Test-ErdConfigValues{
 
 	if($TestNet.IsPresent){
 		Test-MandatoryArgument -ArgumentName "TestNetConfigRepoUrl" -ArgumentValue $ObjectRef.Value.TestNetConfigRepoUrl
+		Test-MandatoryArgument -ArgumentName "TestNetConfigRepoReleaseUrl" -ArgumentValue $ObjectRef.Value.TestNetConfigRepoReleaseUrl
 	}
 	else{
 		Test-MandatoryArgument -ArgumentName "ConfigRepoUrl" -ArgumentValue $ObjectRef.Value.ConfigRepoUrl		
+		Test-MandatoryArgument -ArgumentName "ConfigRepoReleaseUrl" -ArgumentValue $ObjectRef.Value.ConfigRepoReleaseUrl
 	}
-	Test-MandatoryArgument -ArgumentName "ConfigRepoReleaseUrl" -ArgumentValue $ObjectRef.Value.ConfigRepoReleaseUrl
 	Test-MandatoryArgument -ArgumentName "ElrondGoRepoUrl" -ArgumentValue $ObjectRef.Value.ElrondGoRepoUrl
 	Test-MandatoryArgument -ArgumentName "GoInstallDir" -ArgumentValue $ObjectRef.Value.GoInstallDir
 	Test-MandatoryArgument -ArgumentName "GoRequiredVersion" -ArgumentValue $ObjectRef.Value.GoRequiredVersion
