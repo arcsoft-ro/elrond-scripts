@@ -6,16 +6,24 @@ The set of this scripts will support you in deploying, removing, upgrading, as w
 ## Prerequisites
 1. Ubuntu/Debian OS
 2. A standard user on the system with sudo access
-3. Powershell
+3. Microsoft PowerShell. Official page: https://docs.microsoft.com/en-us/powershell/
 
 ## Installing
-
 1. Clone or download the files in this repo
-2. Install powershell if you don't have it already. Check this page for the correct package for your OS Distribution / version:<br>
+2. Install PowerShell if you don't have it already. Check this page for the correct package for your OS Distribution / version:<br>
 https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-linux?view=powershell-7<br><br>
+
 ### Example for Ubuntu 18.04
 ```
-wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
+wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+sudo apt update
+sudo apt install -y powershell
+```
+
+### Example for Debian 10
+```
+wget https://packages.microsoft.com/config/debian/10/packages-microsoft-prod.deb
 sudo dpkg -i packages-microsoft-prod.deb
 sudo apt update
 sudo apt install -y powershell
@@ -27,8 +35,7 @@ After cloning the repository, prepare your configuration file:
 2. Edit the values in the config file to match your preferences
 
 ## Running the scripts
-
-Option1: Run the scripts directly
+Option1: Run the scripts directly from your favourite shell
 ```
 /scripts-path/deploy-node.ps1 
 ```
