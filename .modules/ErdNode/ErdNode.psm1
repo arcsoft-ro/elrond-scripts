@@ -878,7 +878,7 @@ function Remove-ElrondNode{
 		$nodeDir = $nodeConfig["WorkingDir"]
 
 		if(!$Force.IsPresent){
-			Write-Hash -ObjectRef ([ref]$nodeConfig)
+			Write-Hash -ObjectRef ([ref]$nodeConfig) -Sort
 			Get-ContinueApproval -Message "The node described above will be removed. Are you sure you want to continue?" -Warn
 		}
 		

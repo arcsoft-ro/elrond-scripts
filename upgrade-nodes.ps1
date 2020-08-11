@@ -1,9 +1,9 @@
 #!/usr/bin/pwsh
 
 Param(
-    [string]$UtilsDir,
-    [switch]$StartNodes,
     [array]$NodeIndexes,
+    [switch]$StartNodes,
+    [string]$UtilsDir,
     [switch]$TestNet,
     [switch]$Force,
     [switch]$Verbose
@@ -62,11 +62,11 @@ else{
 # Get the user confirmation
 if(!$Force.IsPresent){
     Write-Subsection "Please check the upgrade configuration below"
-    Write-ObjectMembers -ObjectRef ([ref]$userConfig)
+    Write-ObjectMembers -ObjectRef ([ref]$userConfig) -Sort
     Get-ContinueApproval -Message "Do you want to continue?"
 }
 else{
-    Write-ObjectMembers -ObjectRef ([ref]$userConfig)
+    Write-ObjectMembers -ObjectRef ([ref]$userConfig) -Sort
 }
 
 Write-Section "Discovering Elrond nodes on current system"

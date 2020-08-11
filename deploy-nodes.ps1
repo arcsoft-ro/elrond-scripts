@@ -1,13 +1,13 @@
 #!/usr/bin/pwsh
 
 Param(
-    [string]$KeybaseIdentity,
+    [int]$NumberOfNodes = 1,
+    [array]$ShardIds,
     [string]$NodesDir,
     [string]$NodesNamePrefix,
-    [int]$NumberOfNodes = 1,
+    [string]$KeybaseIdentity,
     [string]$UtilsDir,
     [switch]$StartNodes,
-    [array]$ShardIds,
     [switch]$Force,
     [switch]$SkipSystemUpgrade,
     [switch]$SkipBuild,
@@ -51,6 +51,7 @@ Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName UtilsDir -Valu
 if($TestNet.IsPresent){
     Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName TestNet -Value $true
 }
+Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName ShardAssignment -Value $ShardIds
 
 if($userConfig.UserName -eq "root"){
     Write-ErrorResult -Message "Installing the node as root is not allowed. Aborting...`n" -WithPrefix
@@ -80,11 +81,11 @@ if($ShardIds -eq $null){
 # Get the user confirmation
 if(!$Force.IsPresent){
     Write-Subsection "Please check the deploy configuration below"
-    Write-ObjectMembers -ObjectRef ([ref]$userConfig)
+    Write-ObjectMembers -ObjectRef ([ref]$userConfig) -Sort
     Get-ContinueApproval -Message "$NumberOfNodes $displayAmount will be deployed. Do you want to continue?"
 }
 else{
-    Write-ObjectMembers -ObjectRef ([ref]$userConfig)
+    Write-ObjectMembers -ObjectRef ([ref]$userConfig) -Sort
 }
 
 # Check arguments and permissions

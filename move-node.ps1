@@ -53,7 +53,7 @@ if(!$cleanTargetDir){
 }
 
 Write-Subsection "The following node will be moved to $TargetDir"
-Write-Hash -ObjectRef ([ref]$nodeConfig)
+Write-Hash -ObjectRef ([ref]$nodeConfig) -Sort
 if(!$Force.IsPresent){
     Get-ContinueApproval -Message "Are you sure you want to continue?"
 }

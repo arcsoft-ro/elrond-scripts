@@ -16,7 +16,7 @@ $nodesConfig = Get-ElrondNodesConfig -GetProcessInfo
 foreach($nodeConfig in $nodesConfig.Values | Sort-Object -Property NodeIndex){
     $nodeIndex = $nodeConfig["NodeIndex"]
     Write-Subsection "Configuration for node-$nodeIndex"
-    Write-Hash -ObjectRef ([ref]$nodeConfig)
+    Write-Hash -ObjectRef ([ref]$nodeConfig) -Sort
 }
 
 #

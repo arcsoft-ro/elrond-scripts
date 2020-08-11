@@ -238,14 +238,21 @@ function Write-ObjectMembers{
 
 	Param(
 		[Parameter(Mandatory=$true)]
-		[ref]$ObjectRef
+		[ref]$ObjectRef,
+		[switch]$Sort
 	)
 
 	if(!$ObjectRef.Value){
 		return
 	}
 
-	foreach($member in Get-Member -InputObject $ObjectRef.Value -MemberType NoteProperty){
+	$members = Get-Member -InputObject $ObjectRef.Value -MemberType NoteProperty
+
+	if($Sort.IsPresent){
+		$members = $members | Sort-Object
+	}
+	
+	foreach($member in $members){
 		$memberName = $member.Name
 		Write-Aligned -Key $memberName -Value $ObjectRef.Value.$memberName
 	}
@@ -256,14 +263,20 @@ function Write-Hash{
 	Param(
 		[Parameter(Mandatory=$true)]
 		[ref]$ObjectRef,
-		[string]$ForegroundColor = "Yellow"
+		[string]$ForegroundColor = "Yellow",
+		[switch]$Sort
 	)
 
 	if(!$ObjectRef.Value){
 		return
 	}
 
-	foreach($key in $ObjectRef.Value.Keys){
+	$keys = $ObjectRef.Value.Keys
+	if($Sort.IsPresent){
+		$keys = $keys | Sort-Object
+	}
+
+	foreach($key in $keys){
 		$itemValue = $ObjectRef.Value[$key]
 		if($key -eq "ProcessId"){
 			if($itemValue -match "^\d{1,9}"){
