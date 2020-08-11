@@ -51,6 +51,7 @@ Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName UtilsDir -Valu
 if($TestNet.IsPresent){
     Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName TestNet -Value $true
 }
+
 Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName ShardAssignment -Value $ShardIds
 
 if($userConfig.UserName -eq "root"){

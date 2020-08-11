@@ -254,7 +254,11 @@ function Write-ObjectMembers{
 	
 	foreach($member in $members){
 		$memberName = $member.Name
-		Write-Aligned -Key $memberName -Value $ObjectRef.Value.$memberName
+		$memberValue = $ObjectRef.Value.$memberName
+		if($null -eq $memberValue){
+			$memberValue = "N/A"
+		}
+		Write-Aligned -Key $memberName -Value $memberValue
 	}
 }
 
