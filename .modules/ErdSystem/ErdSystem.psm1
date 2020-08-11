@@ -35,7 +35,7 @@ function Install-Dependencies{
 	Write-Subsection "Installing dependencies"
 	
 	Invoke-Command -ScriptBlock {
-		sudo apt install -y git rsync curl zip unzip jq gcc wget
+		sudo apt install -y git rsync curl zip unzip jq gcc wget g++
 	}
 }
 

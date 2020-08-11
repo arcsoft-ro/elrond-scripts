@@ -32,8 +32,8 @@ $userConfig = Get-ConfigValues -ConfigFile "$PSScriptRoot/config/user-config.jso
 if(!$userConfig){
     $userConfig = [PSCustomObject]@{}
 }
-Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName NodesDir -Value $NodesDir
-Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName UtilsDir -Value $UtilsDir
+Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName NodesDir -Value $NodesDir
+Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName UtilsDir -Value $UtilsDir
 
 # Get the user confirmation
 if(!$Force.IsPresent){

@@ -58,6 +58,7 @@ function Test-InstallUserConfigValues{
 		Test-MandatoryArgument -ArgumentName "NodesNamePrefix" -ArgumentValue $ObjectRef.Value.NodesNamePrefix
 		Test-MandatoryArgument -ArgumentName "UserName" -ArgumentValue $ObjectRef.Value.UserName
 		Test-WritePermissionsOnDirPathArgument -DirPath $ObjectRef.Value.UtilsDir -ArgumentName "UtilsDir"
+		Test-MandatoryArgument -ArgumentName "TestNet" -ArgumentValue $ObjectRef.Value.TestNet
 	}
 	catch{
 		Write-ErrorResult -Message "Error during user settings and arguments check! Aborting..."
@@ -76,6 +77,7 @@ function Test-UpgradeUserConfigValues{
 	try{
 		Test-MandatoryArgument -ArgumentName "UserName" -ArgumentValue $ObjectRef.Value.UserName
 		Test-WritePermissionsOnDirPathArgument -DirPath $ObjectRef.Value.UtilsDir -ArgumentName "UtilsDir"
+		Test-MandatoryArgument -ArgumentName "TestNet" -ArgumentValue $ObjectRef.Value.TestNet
 	}
 	catch{
 		Write-ErrorResult -Message "Error during user settings and arguments check! Aborting..."
@@ -88,11 +90,17 @@ function Test-ErdConfigValues{
 	
 	Param(
 		[Parameter(Mandatory=$true)]
-		[ref]$ObjectRef
+		[ref]$ObjectRef,
+		[switch]$TestNet
 	)
 
+	if($TestNet.IsPresent){
+		Test-MandatoryArgument -ArgumentName "TestNetConfigRepoUrl" -ArgumentValue $ObjectRef.Value.TestNetConfigRepoUrl
+	}
+	else{
+		Test-MandatoryArgument -ArgumentName "ConfigRepoUrl" -ArgumentValue $ObjectRef.Value.ConfigRepoUrl		
+	}
 	Test-MandatoryArgument -ArgumentName "ConfigRepoReleaseUrl" -ArgumentValue $ObjectRef.Value.ConfigRepoReleaseUrl
-	Test-MandatoryArgument -ArgumentName "ConfigRepoUrl" -ArgumentValue $ObjectRef.Value.ConfigRepoUrl
 	Test-MandatoryArgument -ArgumentName "ElrondGoRepoUrl" -ArgumentValue $ObjectRef.Value.ElrondGoRepoUrl
 	Test-MandatoryArgument -ArgumentName "GoInstallDir" -ArgumentValue $ObjectRef.Value.GoInstallDir
 	Test-MandatoryArgument -ArgumentName "GoRequiredVersion" -ArgumentValue $ObjectRef.Value.GoRequiredVersion

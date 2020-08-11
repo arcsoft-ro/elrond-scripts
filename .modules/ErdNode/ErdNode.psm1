@@ -322,9 +322,9 @@ function Deploy-ElrondNode{
 	else{
 		$nodeName = $UserConfig.NodesNamePrefix + "$NodeIndex"
 		$ShardId = Test-ShardId -ShardId $ShardId
-		Add-ValueToObject -ObjectRef ([ref]$prefs) -MemberName "NodeDisplayName" -Value $nodeName
-		Add-ValueToObject -ObjectRef ([ref]$prefs) -MemberName "Identity" -Value $UserConfig.KeybaseIdentity
-		Add-ValueToObject -ObjectRef ([ref]$prefs) -MemberName "DestinationShardAsObserver" -Value $ShardId
+		Add-StringValueToObject -ObjectRef ([ref]$prefs) -MemberName "NodeDisplayName" -Value $nodeName
+		Add-StringValueToObject -ObjectRef ([ref]$prefs) -MemberName "Identity" -Value $UserConfig.KeybaseIdentity
+		Add-StringValueToObject -ObjectRef ([ref]$prefs) -MemberName "DestinationShardAsObserver" -Value $ShardId
 	}
 
 	$result = Set-PrefsTomlValues -NodeConfigDir $nodeConfigDir -ObjectRef ([ref]$prefs)
@@ -483,7 +483,7 @@ function Get-PrefsTomlValues{
 	$prefs = [PSCustomObject]@{}
 	foreach($prefMember in Get-PrefsTomlMembersForBackup){
 		$memberValue = Get-TomlValue -Content $prefsLines -PropertyName $prefMember
-		Add-ValueToObject -ObjectRef ([ref]$prefs) -MemberName $prefMember -Value $memberValue
+		Add-StringValueToObject -ObjectRef ([ref]$prefs) -MemberName $prefMember -Value $memberValue
 	}
 
 	return $prefs

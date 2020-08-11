@@ -22,7 +22,7 @@ Write-Section "Starting Elrond Node/s Keys Backup"
 # User Configuration
 $userConfig = Get-ConfigValues -ConfigFile "$PSScriptRoot/config/user-config.json"
 try{
-    Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName UtilsDir -Value $BackupDir
+    Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName UtilsDir -Value $BackupDir
     Test-WritePermissionsOnDirPathArgument -DirPath $userConfig.BackupDir -ArgumentName "BackupDir"
 }
 catch{

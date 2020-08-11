@@ -12,6 +12,7 @@ Param(
     [switch]$SkipSystemUpgrade,
     [switch]$SkipBuild,
     [switch]$SkipUtilsDeploy,
+    [switch]$TestNet,
     [switch]$Verbose
 )
 
@@ -41,12 +42,15 @@ $userConfig = Get-ConfigValues -ConfigFile "$PSScriptRoot/config/user-config.jso
 if(!$userConfig){
     $userConfig = [PSCustomObject]@{}
 }
-Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName KeybaseIdentity -Value $KeybaseIdentity
-Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName NodesDir -Value $NodesDir
-Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName NodesNamePrefix -Value $NodesNamePrefix
-Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName NumberOfNodes -Value $NumberOfNodes
-Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName UserName -Value $env:USER
-Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName UtilsDir -Value $UtilsDir
+Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName KeybaseIdentity -Value $KeybaseIdentity
+Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName NodesDir -Value $NodesDir
+Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName NodesNamePrefix -Value $NodesNamePrefix
+Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName NumberOfNodes -Value $NumberOfNodes
+Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName UserName -Value $env:USER
+Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName UtilsDir -Value $UtilsDir
+if($TestNet.IsPresent){
+    Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName TestNet -Value $true
+}
 
 if($userConfig.UserName -eq "root"){
     Write-ErrorResult -Message "Installing the node as root is not allowed. Aborting...`n" -WithPrefix
@@ -58,21 +62,33 @@ if($userConfig.UserName -eq "root"){
 $goBinPath = $elrondConfig.GoInstallDir + "/go/bin"
 $buildDir = Get-ElrondBuildDir
 $elrondGoRepoPath = $buildDir + "/" + (Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.ElrondGoRepoUrl)
-$configRepoPath = $buildDir + "/" + ((Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.ConfigRepoUrl))
+if($userConfig.TestNet -eq $true){
+    $configRepoPath = $buildDir + "/" + ((Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.TestNetConfigRepoUrl))
+    $configRepoUrl = $elrondConfig.TestNetConfigRepoUrl
+    $configRepoReleaseUrl = $elrondConfig.ConfigRepoReleaseUrl
+}
+else{
+    $configRepoPath = $buildDir + "/" + ((Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.ConfigRepoUrl))
+    $configRepoUrl = $elrondConfig.ConfigRepoUrl
+    $configRepoReleaseUrl = $elrondConfig.ConfigRepoReleaseUrl
+}
 $displayAmount = $NumberOfNodes -eq 1 ? "node" : "nodes"
 if($ShardIds -eq $null){
     $ShardIds = @()
 }
 
 # Get the user confirmation
-Write-Subsection "Please check the installation configuration below"
-Write-ObjectMembers -ObjectRef ([ref]$userConfig)
 if(!$Force.IsPresent){
+    Write-Subsection "Please check the deploy configuration below"
+    Write-ObjectMembers -ObjectRef ([ref]$userConfig)
     Get-ContinueApproval -Message "$NumberOfNodes $displayAmount will be deployed. Do you want to continue?"
+}
+else{
+    Write-ObjectMembers -ObjectRef ([ref]$userConfig)
 }
 
 # Check arguments and permissions
-Test-ErdConfigValues -ObjectRef ([ref]$elrondConfig)
+Test-ErdConfigValues -ObjectRef ([ref]$elrondConfig) -TestNet:$userConfig.TestNet
 Test-InstallUserConfigValues -ObjectRef ([ref]$userConfig)
 
 Write-Section "Discovering Elrond nodes on current system"
@@ -122,7 +138,6 @@ if(!$SkipBuild.IsPresent){
     # Repos
     Write-Section "Preparing build" -NoNewline
     Sync-GitRepo -BuildDir $buildDir -RepoUrl $elrondConfig.ElrondGoRepoUrl -Verbose:$Verbose
-    Sync-GitRepo -BuildDir $buildDir -RepoUrl $elrondConfig.ConfigRepoUrl -Verbose:$Verbose
 
     # Go
     Write-Subsection "Installing Go"
@@ -142,8 +157,8 @@ if(!$SkipBuild.IsPresent){
     # Node
     Write-Subsection "Building the Elrond node"
     $nodeBuildResult = Build-ElrondNode `
-        -ConfigRepoReleaseUrl $elrondConfig.ConfigRepoReleaseUrl `
-        -ConfigRepoUrl $elrondConfig.ConfigRepoUrl `
+        -ConfigRepoReleaseUrl $configRepoReleaseUrl `
+        -ConfigRepoUrl $configRepoUrl `
         -GoBinPath $goBinPath `
         -ElrondGoRepoPath $elrondGoRepoPath
         
@@ -175,8 +190,12 @@ if(!$SkipBuild.IsPresent){
 
 # Node/s
 Write-Section "Deploying the Elrond node/s, configuration and systemd files" -NoNewline
+
+Sync-GitRepo -BuildDir $buildDir -RepoUrl $configRepoUrl -Verbose:$Verbose
 $shardIndex = 0
+
 for($i = $startNodeIndex; $i -lt $startNodeIndex + $NumberOfNodes; $i++ ){
+    
     Write-Subsection "Deploying node-$i"
     
     $result = Deploy-ElrondNode -ElrondGoRepoPath $elrondGoRepoPath `

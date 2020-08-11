@@ -12,7 +12,7 @@ foreach($requiredModule in $requiredModules){
 }
 
 $userConfig = Get-ConfigValues -ConfigFile "$PSScriptRoot/config/user-config.json"
-Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName UtilsDir -Value $UtilsDir
+Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName UtilsDir -Value $UtilsDir
 Test-MandatoryArgument -ArgumentName "UtilsDir" -ArgumentValue $userConfig.UtilsDir
 
 Start-Termui -UtilsDir $userConfig.UtilsDir -NodeIndex $NodeIndex

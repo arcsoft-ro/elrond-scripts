@@ -3,5 +3,6 @@
     "KeybaseIdentity":"",
     "NodesDir":"/home/elrond/nodes",
     "NodesNamePrefix":"erd-node-",
-    "UtilsDir":"/home/elrond/utils"
+    "UtilsDir":"/home/elrond/utils",
+    "TestNet":false
 }

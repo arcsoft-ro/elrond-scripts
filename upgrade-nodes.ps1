@@ -4,6 +4,7 @@ Param(
     [string]$UtilsDir,
     [switch]$StartNodes,
     [array]$NodeIndexes,
+    [switch]$TestNet,
     [switch]$Force,
     [switch]$Verbose
 )
@@ -28,23 +29,45 @@ if(!$elrondConfig){
 
     exit
 }
-Test-ErdConfigValues -ObjectRef ([ref]$elrondConfig)
 
 # User Configuration
 $userConfig = Get-ConfigValues -ConfigFile "$PSScriptRoot/config/user-config.json"
 if(!$userConfig){
     $userConfig = [PSCustomObject]@{}
 }
-Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName UserName -Value $env:USER
-Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName UtilsDir -Value $UtilsDir
+Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName UserName -Value $env:USER
+Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName UtilsDir -Value $UtilsDir
+if($TestNet.IsPresent){
+    Add-ValueToObject -ObjectRef ([ref]$userConfig) -MemberName TestNet -Value $true
+}
 
+Test-ErdConfigValues -ObjectRef ([ref]$elrondConfig) -TestNet:$userConfig.TestNet
 Test-UpgradeUserConfigValues -ObjectRef ([ref]$userConfig)
 
 # Script variables
 $goBinPath = $elrondConfig.GoInstallDir + "/go/bin"
 $buildDir = Get-ElrondBuildDir
 $elrondGoRepoPath = $buildDir + "/" + (Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.ElrondGoRepoUrl)
-$configRepoPath = $buildDir + "/" + ((Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.ConfigRepoUrl))
+if($userConfig.TestNet -eq $true){
+    $configRepoPath = $buildDir + "/" + ((Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.TestNetConfigRepoUrl))
+    $configRepoUrl = $elrondConfig.TestNetConfigRepoUrl
+    $configRepoReleaseUrl = $elrondConfig.ConfigRepoReleaseUrl
+}
+else{
+    $configRepoPath = $buildDir + "/" + ((Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.ConfigRepoUrl))
+    $configRepoUrl = $elrondConfig.ConfigRepoUrl
+    $configRepoReleaseUrl = $elrondConfig.ConfigRepoReleaseUrl
+}
+
+# Get the user confirmation
+if(!$Force.IsPresent){
+    Write-Subsection "Please check the upgrade configuration below"
+    Write-ObjectMembers -ObjectRef ([ref]$userConfig)
+    Get-ContinueApproval -Message "Do you want to continue?"
+}
+else{
+    Write-ObjectMembers -ObjectRef ([ref]$userConfig)
+}
 
 Write-Section "Discovering Elrond nodes on current system"
 $nodesConfig = Get-ElrondNodesConfig
@@ -98,7 +121,6 @@ Set-JournalctlConfig
 # Repos
 Write-Section "Preparing build" -NoNewline
 Sync-GitRepo -BuildDir $buildDir -RepoUrl $elrondConfig.ElrondGoRepoUrl -Verbose:$Verbose
-Sync-GitRepo -BuildDir $buildDir -RepoUrl $elrondConfig.ConfigRepoUrl -Verbose:$Verbose
 
 # Go
 Write-Subsection "Installing Go"
@@ -118,8 +140,8 @@ Write-Section "Building the Elrond binaries" -NoNewline
 # Node
 Write-Subsection "Building the Elrond node"
 $nodeBuildResult = Build-ElrondNode `
-    -ConfigRepoReleaseUrl $elrondConfig.ConfigRepoReleaseUrl `
-    -ConfigRepoUrl $elrondConfig.ConfigRepoUrl `
+    -ConfigRepoReleaseUrl $configRepoReleaseUrl `
+    -ConfigRepoUrl $configRepoUrl `
     -GoBinPath $goBinPath `
     -ElrondGoRepoPath $elrondGoRepoPath
     
@@ -150,12 +172,13 @@ foreach($utilName in Get-ElrondUtils){
 
 # Node/s
 Write-Section "Upgrading the Elrond node/s and configuration" -NoNewline
+
+Sync-GitRepo -BuildDir $buildDir -RepoUrl $configRepoUrl -Verbose:$Verbose
+
 foreach($nodeIndex in $NodeIndexes){
 
     $nodeConfig = $nodesConfig["$nodeIndex"]
-
     Write-Subsection "Upgrading node-$nodeIndex"
-
     Stop-ElrondNode -NodeIndex $nodeIndex
     
     $result = Deploy-ElrondNode -ElrondGoRepoPath $elrondGoRepoPath `

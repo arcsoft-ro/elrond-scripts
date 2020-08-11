@@ -188,7 +188,7 @@ function Get-ContinueApproval{
 	}
 }
 
-function Add-ValueToObject{
+function Add-StringValueToObject{
 
 	Param(
 		[Parameter(Mandatory=$true)]
@@ -209,6 +209,28 @@ function Add-ValueToObject{
 		else{
 			$ObjectRef.Value | Add-Member -NotePropertyName $MemberName -NotePropertyValue $Value
 		}
+	}
+}
+
+function Add-ValueToObject{
+
+	Param(
+		[Parameter(Mandatory=$true)]
+		[ref]$ObjectRef,
+		[Parameter(Mandatory=$true)]
+		[string]$MemberName,
+		[object]$Value
+	)
+
+	if(!$ObjectRef.Value){
+		return
+	}
+
+	if($ObjectRef.Value.PSobject.Properties.Name -Match $MemberName){
+		$ObjectRef.Value.$MemberName = $Value
+	}
+	else{
+		$ObjectRef.Value | Add-Member -NotePropertyName $MemberName -NotePropertyValue $Value
 	}
 }
 
