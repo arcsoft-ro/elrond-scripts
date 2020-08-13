@@ -17,7 +17,8 @@ function Sync-GitRepo{
         [Parameter(Mandatory=$true)]
         [string]$BuildDir,
         [Parameter(Mandatory=$true)]
-        [string]$RepoUrl
+        [string]$RepoUrl,
+        [string]$ReleaseTag
     )
 
     $IsVerbose = $PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent ? $true : $false
@@ -40,10 +41,10 @@ function Sync-GitRepo{
             exit
         }
         ([RepoStatus]::EMPTY) {
-            Initialize-GitRepo -BuildDir $BuildDir -RepoUrl $RepoUrl -Verbose:$IsVerbose
+            Initialize-GitRepo -BuildDir $BuildDir -RepoUrl $RepoUrl -ReleaseTag $ReleaseTag -Verbose:$IsVerbose
         }
         ([RepoStatus]::URLMATCH) {
-            Update-GitRepo -RepoPath $repoPath -Reset -Verbose:$IsVerbose
+            Update-GitRepo -RepoPath $repoPath -Reset -ReleaseTag $ReleaseTag -Verbose:$IsVerbose
         }
         Default {
             Write-ErrorResult -Message "Could not fetch target Git working directory status from $repoPath... Aborting"
@@ -59,7 +60,8 @@ function Initialize-GitRepo{
         [Parameter(Mandatory=$true)]
         [string]$BuildDir,
         [Parameter(Mandatory=$true)]
-        [string]$RepoUrl
+        [string]$RepoUrl,
+        [string]$ReleaseTag
     )
 
     $IsVerbose = $PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent ? $true : $false
@@ -67,28 +69,48 @@ function Initialize-GitRepo{
     Initialize-Dir -Path $BuildDir -SkipClean -Silent
     Write-Subsection "Initializing repository"
 
-    if(!$IsVerbose){
-        Write-DoingAction "Cloning repo $RepoUrl to $BuildDir"
-    }
+    Write-DoingAction "Cloning repo $RepoUrl to $BuildDir"
+
+    $initialLocation = Get-Location
+    Set-Location $BuildDir
 
     $output = Invoke-Command -ScriptBlock {
-        $initialLocation = Get-Location
-        Set-Location $BuildDir
         if($IsVerbose){
             git clone $RepoUrl
         }
         else{
             git clone $RepoUrl 2>&1
         }
-        Set-Location $initialLocation
     }
-
     if($IsVerbose){
         $output
     }
     else{
         Write-Result
     }
+
+    if(![string]::IsNullOrWhiteSpace($ReleaseTag)){
+        Set-Location (Get-DefaultDirFromRepoUrl -RepoUrl $RepoUrl)
+        Write-DoingAction "Switching to release tag $ReleaseTag"
+
+        $output = Invoke-Command -ScriptBlock {
+            if($IsVerbose){
+                git checkout --force $ReleaseTag
+            }
+            else{
+                git checkout --force $ReleaseTag 2>&1
+            }
+        }
+
+        if($IsVerbose){
+            $output
+        }
+        else{
+            Write-SoftResult
+        }
+    }
+
+    Set-Location $initialLocation
 }
 
 function Update-GitRepo{
@@ -96,6 +118,7 @@ function Update-GitRepo{
     Param(
         [Parameter(Mandatory=$true)]
         [string]$RepoPath,
+        [string]$ReleaseTag,
         [switch]$Reset
     )
 
@@ -114,7 +137,11 @@ function Update-GitRepo{
     $output = Invoke-Command -ScriptBlock {
         $initialLocation = Get-Location
         Set-Location $RepoPath
+        git checkout --force master
         git pull 2>&1
+        if(![string]::IsNullOrWhiteSpace($ReleaseTag)){
+            git checkout --force $ReleaseTag
+        }
         Set-Location $initialLocation
     }
 

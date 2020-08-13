@@ -207,7 +207,7 @@ function Add-StringValueToObject{
 			$ObjectRef.Value.$MemberName = $Value
 		}
 		else{
-			$ObjectRef.Value | Add-Member -NotePropertyName $MemberName -NotePropertyValue $Value
+			Add-Member -InputObject $ObjectRef.Value -NotePropertyName $MemberName -NotePropertyValue $Value
 		}
 	}
 }

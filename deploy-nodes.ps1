@@ -38,8 +38,9 @@ if(!$elrondConfig){
 }
 
 # User Configuration
-$userConfig = Get-ConfigValues -ConfigFile "$PSScriptRoot/config/user-config.json"
+$userConfig = Get-ConfigValues -ConfigFile "$PSScriptRoot/config/user-config.json" -Verbose:$Verbose
 if(!$userConfig){
+    Write-WarningResult -Message "config not readable"
     $userConfig = [PSCustomObject]@{}
 }
 Add-StringValueToObject -ObjectRef ([ref]$userConfig) -MemberName KeybaseIdentity -Value $KeybaseIdentity
@@ -63,16 +64,19 @@ if($userConfig.UserName -eq "root"){
 # Script variables
 $goBinPath = $elrondConfig.GoInstallDir + "/go/bin"
 $buildDir = Get-ElrondBuildDir
-$elrondGoRepoPath = $buildDir + "/" + (Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.ElrondGoRepoUrl)
 if($userConfig.TestNet -eq $true){
     $configRepoPath = $buildDir + "/" + ((Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.TestNetConfigRepoUrl))
     $configRepoUrl = $elrondConfig.TestNetConfigRepoUrl
     $configRepoReleaseUrl = $elrondConfig.TestNetConfigRepoReleaseUrl
+    $elrondGoRepoUrl = $elrondConfig.TestNetElrondGoRepoUrl
+    $elrondGoRepoPath = $buildDir + "/" + (Get-DefaultDirFromRepoUrl -RepoUrl $elrondGoRepoUrl)
 }
 else{
     $configRepoPath = $buildDir + "/" + ((Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.ConfigRepoUrl))
     $configRepoUrl = $elrondConfig.ConfigRepoUrl
     $configRepoReleaseUrl = $elrondConfig.ConfigRepoReleaseUrl
+    $elrondGoRepoUrl = $elrondConfig.ElrondGoRepoUrl
+    $elrondGoRepoPath = $buildDir + "/" + (Get-DefaultDirFromRepoUrl -RepoUrl $elrondGoRepoUrl)
 }
 $displayAmount = $NumberOfNodes -eq 1 ? "node" : "nodes"
 if($ShardIds -eq $null){
@@ -138,7 +142,10 @@ if(!$SkipSystemUpgrade.IsPresent){
 if(!$SkipBuild.IsPresent){
     # Repos
     Write-Section "Preparing build" -NoNewline
-    Sync-GitRepo -BuildDir $buildDir -RepoUrl $elrondConfig.ElrondGoRepoUrl -Verbose:$Verbose
+    
+    Sync-GitRepo -BuildDir $buildDir -RepoUrl $configRepoUrl -Verbose:$Verbose
+    $releaseTag = Get-BinaryVersion -ConfigRepoPath $configRepoPath
+    Sync-GitRepo -BuildDir $buildDir -RepoUrl $elrondGoRepoUrl -ReleaseTag $releaseTag -Verbose:$Verbose
 
     # Go
     Write-Subsection "Installing Go"
@@ -192,7 +199,6 @@ if(!$SkipBuild.IsPresent){
 # Node/s
 Write-Section "Deploying the Elrond node/s, configuration and systemd files" -NoNewline
 
-Sync-GitRepo -BuildDir $buildDir -RepoUrl $configRepoUrl -Verbose:$Verbose
 $shardIndex = 0
 
 for($i = $startNodeIndex; $i -lt $startNodeIndex + $NumberOfNodes; $i++ ){

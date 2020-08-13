@@ -990,6 +990,19 @@ function Set-GoEnvironmentVariables{
 	}
 }
 
+function Get-BinaryVersion{
+
+	Param(
+		[Parameter(Mandatory=$true)]
+		[string]$ConfigRepoPath
+	)
+
+	$filePath = "$ConfigRepoPath/binaryVersion"
+
+	return (Get-Content -Path $filePath).Trim()
+	
+}
+
 function Get-ElrondUtils{
 	return "termui","logviewer","seednode","keygenerator"
 }

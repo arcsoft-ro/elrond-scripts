@@ -47,16 +47,19 @@ Test-UpgradeUserConfigValues -ObjectRef ([ref]$userConfig)
 # Script variables
 $goBinPath = $elrondConfig.GoInstallDir + "/go/bin"
 $buildDir = Get-ElrondBuildDir
-$elrondGoRepoPath = $buildDir + "/" + (Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.ElrondGoRepoUrl)
 if($userConfig.TestNet -eq $true){
     $configRepoPath = $buildDir + "/" + ((Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.TestNetConfigRepoUrl))
     $configRepoUrl = $elrondConfig.TestNetConfigRepoUrl
     $configRepoReleaseUrl = $elrondConfig.TestNetConfigRepoReleaseUrl
+    $elrondGoRepoUrl = $elrondConfig.TestNetElrondGoRepoUrl
+    $elrondGoRepoPath = $buildDir + "/" + (Get-DefaultDirFromRepoUrl -RepoUrl $elrondGoRepoUrl)
 }
 else{
     $configRepoPath = $buildDir + "/" + ((Get-DefaultDirFromRepoUrl -RepoUrl $elrondConfig.ConfigRepoUrl))
     $configRepoUrl = $elrondConfig.ConfigRepoUrl
     $configRepoReleaseUrl = $elrondConfig.ConfigRepoReleaseUrl
+    $elrondGoRepoUrl = $elrondConfig.ElrondGoRepoUrl
+    $elrondGoRepoPath = $buildDir + "/" + (Get-DefaultDirFromRepoUrl -RepoUrl $elrondGoRepoUrl)
 }
 
 # Get the user confirmation
@@ -120,7 +123,10 @@ Set-JournalctlConfig
 
 # Repos
 Write-Section "Preparing build" -NoNewline
-Sync-GitRepo -BuildDir $buildDir -RepoUrl $elrondConfig.ElrondGoRepoUrl -Verbose:$Verbose
+
+Sync-GitRepo -BuildDir $buildDir -RepoUrl $configRepoUrl -Verbose:$Verbose
+$releaseTag = Get-BinaryVersion -ConfigRepoPath $configRepoPath
+Sync-GitRepo -BuildDir $buildDir -RepoUrl $elrondGoRepoUrl -ReleaseTag $releaseTag -Verbose:$Verbose
 
 # Go
 Write-Subsection "Installing Go"
@@ -172,8 +178,6 @@ foreach($utilName in Get-ElrondUtils){
 
 # Node/s
 Write-Section "Upgrading the Elrond node/s and configuration" -NoNewline
-
-Sync-GitRepo -BuildDir $buildDir -RepoUrl $configRepoUrl -Verbose:$Verbose
 
 foreach($nodeIndex in $NodeIndexes){
 
