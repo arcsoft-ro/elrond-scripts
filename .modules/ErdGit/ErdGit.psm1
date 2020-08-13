@@ -82,6 +82,7 @@ function Initialize-GitRepo{
             git clone $RepoUrl 2>&1
         }
     }
+
     if($IsVerbose){
         $output
     }
@@ -90,6 +91,7 @@ function Initialize-GitRepo{
     }
 
     if(![string]::IsNullOrWhiteSpace($ReleaseTag)){
+        
         Set-Location (Get-DefaultDirFromRepoUrl -RepoUrl $RepoUrl)
         Write-DoingAction "Switching to release tag $ReleaseTag"
 
@@ -130,27 +132,51 @@ function Update-GitRepo{
         Reset-GitRepo -RepoPath $RepoPath -Verbose:$IsVerbose
     }
 
-    if(!$IsVerbose){
-        Write-DoingAction "Pulling latest changes"
-    }
+    Write-DoingAction "Pulling latest changes"
+
+    $initialLocation = Get-Location
+    Set-Location $RepoPath
 
     $output = Invoke-Command -ScriptBlock {
-        $initialLocation = Get-Location
-        Set-Location $RepoPath
-        git checkout --force master
-        git pull 2>&1
-        if(![string]::IsNullOrWhiteSpace($ReleaseTag)){
-            git checkout --force $ReleaseTag
+        if($IsVerbose){
+            git checkout --force master
+            git pull
         }
-        Set-Location $initialLocation
+        else{
+            git checkout --force master 2>&1
+            git pull 2>&1
+        }
     }
-
+    
     if($IsVerbose){
         $output
     }
     else{
         Write-Result
     }
+
+    if(![string]::IsNullOrWhiteSpace($ReleaseTag)){
+        
+        Write-DoingAction "Switching to release tag $ReleaseTag"
+
+        $output = Invoke-Command -ScriptBlock {
+            if($IsVerbose){
+                git checkout --force $ReleaseTag
+            }
+            else{
+                git checkout --force $ReleaseTag 2>&1
+            }
+        }
+
+        if($IsVerbose){
+            $output
+        }
+        else{
+            Write-SoftResult
+        }
+    }
+
+    Set-Location $initialLocation
 }
 
 function Reset-GitRepo{
